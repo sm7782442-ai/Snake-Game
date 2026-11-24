@@ -1,0 +1,438 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  * { box-sizing: border-box; user-select: none; font-family: 'Segoe UI', sans-serif; }
+  body { margin: 0; padding: 10px; background: linear-gradient(135deg, #1a0b2e, #3b1d6e, #16213e); color: white; display: flex; flex-direction: column; align-items: center; }
+  .top-bar { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; align-items: center; background: rgba(0,0,0,0.7); padding: 8px 18px; border-radius: 15px; border: 2px solid #00f5d4; margin-bottom: 10px; font-weight: bold; }
+  .snd-btn { background: #221942; color: #00f5d4; border: 1px solid #00f5d4; border-radius: 8px; padding: 4px 10px; cursor: pointer; font-weight: bold; font-size: 12px; }
+  #lobbyScreen { width: 100%; max-width: 720px; background: rgba(25, 18, 50, 0.94); border: 3px solid #fee440; border-radius: 20px; padding: 15px; text-align: center; box-shadow: 0 0 30px rgba(254, 228, 64, 0.3); }
+  .title { font-size: 30px; margin: 0 0 4px 0; background: linear-gradient(90deg, #00f5d4, #fee440, #ff007f); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; }
+  .diff-row { display: flex; justify-content: center; gap: 10px; margin: 10px 0; }
+  .diff-btn { padding: 7px 18px; border: 2px solid #555; background: #1f163b; color: white; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 13px; }
+  .diff-btn.active { background: #fee440; color: black; border-color: #fee440; transform: scale(1.05); }
+  .shop-sections { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 8px; }
+  .shop-box { flex: 1; min-width: 290px; background: rgba(15, 10, 35, 0.85); border: 2px solid #9b5de5; border-radius: 15px; padding: 10px; }
+  .shop-box h3 { margin: 0 0 8px 0; color: #00f5d4; font-size: 15px; border-bottom: 1px solid #444; padding-bottom: 4px; }
+  .scroll-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; max-height: 200px; overflow-y: auto; padding-right: 4px; }
+  .card { background: #221942; border: 2px solid #3c2a73; border-radius: 10px; padding: 7px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .card.sel { border-color: #00f5d4; background: #193b3e; }
+  .preview-wp { width: 100%; height: 28px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.3); }
+  .preview-sk { display: flex; gap: 2px; align-items: center; justify-content: center; height: 28px; }
+  .sk-dot { width: 13px; height: 13px; border-radius: 50%; }
+  .card-name { font-size: 11px; font-weight: bold; }
+  .buy-btn { width: 100%; padding: 4px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; background: #9b5de5; color: white; }
+  .buy-btn.eq { background: #00f5d4; color: black; }
+  .big-play { margin-top: 12px; padding: 14px 45px; font-size: 22px; font-weight: 900; color: white; background: linear-gradient(45deg, #ff007f, #ff7b00); border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 0 20px rgba(255, 0, 127, 0.7); }
+  #gameScreen { display: none; flex-direction: column; align-items: center; position: relative; }
+  .game-top { display: flex; gap: 12px; align-items: center; margin-bottom: 6px; }
+  .home-btn { padding: 5px 12px; background: #ff007f; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px; }
+  canvas { border: 4px solid #fee440; border-radius: 12px; box-shadow: 0 0 25px rgba(254, 228, 64, 0.5); display: block; }
+  .over-box { position: absolute; top: 38px; width: 400px; height: 400px; background: rgba(10, 5, 25, 0.92); border-radius: 12px; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; z-index: 10; }
+  .ctrls { margin-top: 8px; display: grid; grid-template-columns: repeat(3, 65px); grid-template-rows: repeat(2, 46px); gap: 6px; }
+  .cbtn { background: #261a4a; color: #fee440; border: 2px solid #fee440; border-radius: 10px; font-size: 20px; cursor: pointer; }
+  .cbtn:active { background: #fee440; color: black; }
+</style>
+</head>
+
+<body>
+<div class="top-bar">
+  <span style="color:#00f5d4">🍎 Score: <b id="sc">0</b></span>
+  <span style="color:#ff7b00">🏆 Level: <b id="lv">1</b></span>
+  <span style="color:#fee440">🪙 Coins: <b id="cn">25</b></span>
+  <span style="color:#ff007f">💎 Gems: <b id="gm">2</b></span>
+  <button id="sndBtn" class="snd-btn" onclick="toggleSound()">🔊 Sound: ON</button>
+</div>
+
+<div id="lobbyScreen">
+  <h1 class="title">🐍 MEGA SNAKE PRO</h1>
+  <p style="font-size:11px; color:#ddd; margin:0;">Auto-Save ON! 🧲 Magnet, 🛡️ Shield aur 💣 Bombs shamil hain.</p>
+  <div class="diff-row">
+    <button class="diff-btn active" onclick="setDiff('easy', this)">Easy (Aaramdeh)</button>
+    <button class="diff-btn" onclick="setDiff('diff', this)">Difficult</button>
+    <button class="diff-btn" onclick="setDiff('hard', this)">Hard</button>
+  </div>
+  <div class="shop-sections">
+    <div class="shop-box">
+      <h3>🖼️ Wallpapers (16 Designs)</h3>
+      <div id="wpGrid" class="scroll-grid"></div>
+    </div>
+    <div class="shop-box">
+      <h3>🐍 Snake Skins (16 Designs)</h3>
+      <div id="skGrid" class="scroll-grid"></div>
+    </div>
+  </div>
+  <button class="big-play" onclick="openGame()">▶ PLAY GAME</button>
+</div>
+
+<div id="gameScreen">
+  <div class="game-top">
+    <button class="home-btn" onclick="goHome()">🏠 Home / Shop</button>
+    <span id="lvlGoal" style="font-size:12px; color:#fee440; font-weight:bold;">Level 1: 5 Seb</span>
+    <span id="activePwr" style="font-size:12px; color:#00f5d4; font-weight:bold;"></span>
+  </div>
+  <div id="bTimer" style="height:18px; color:#00f5d4; font-weight:bold; font-size:12px; margin-bottom:2px;"></div>
+  <canvas id="game" width="400" height="400" tabindex="1"></canvas>
+  <div id="overBox" class="over-box">
+    <h1 style="color:#ff007f; margin:0; font-size:30px;">OUT HO GAYE!</h1>
+    <p style="font-size:16px; margin:6px 0;">Score: <b id="fSc" style="color:#00f5d4;">0</b></p>
+    <p style="font-size:12px; color:#ff7b00; margin:4px 0;">Penalty: -5 Coins 🪙 kat gaye!</p>
+    <div style="display:flex; gap:10px; margin-top:12px;">
+      <button class="big-play" style="padding:10px 22px; font-size:15px; margin:0;" onclick="startMatch()">🔄 Phir Khelein</button>
+      <button class="home-btn" style="padding:10px 18px; font-size:15px;" onclick="goHome()">🏠 Shop</button>
+    </div>
+  </div>
+  <div class="ctrls">
+    <div></div><button class="cbtn" onclick="setDir('UP')">▲</button><div></div>
+    <button class="cbtn" onclick="setDir('LEFT')">◀</button>
+    <button class="cbtn" onclick="setDir('DOWN')">▼</button>
+    <button class="cbtn" onclick="setDir('RIGHT')">▶</button>
+  </div>
+</div>
+
+<script>
+const cvs = document.getElementById("game"), ctx = cvs.getContext("2d"), box = 20;
+let coins = 25, gems = 2, score = 0, level = 1, eaten = 0, speed = 200, loop = null, playing = false, soundOn = true;
+let snake = [], d = "RIGHT", nextD = "RIGHT", food = {x:200, y:200}, bonus = null, bTime = null;
+let bombs = [], powerUp = null, shieldActive = false, magnetTimer = 0, tickCount = 0;
+
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playTone(freq, type, dur) {
+  if (!soundOn) return;
+  try {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    let osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+    osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(); osc.stop(audioCtx.currentTime + dur);
+  } catch(e) {}
+}
+function toggleSound() {
+  soundOn = !soundOn;
+  document.getElementById("sndBtn").innerText = soundOn ? "🔊 Sound: ON" : "🔇 Sound: OFF";
+}
+
+const wps = [
+  { id:0, name:'Neon Night', cost:0, t:'free', c1:'#12122b', c2:'#1b1b3a', un:true },
+  { id:1, name:'Bright Grass', cost:15, t:'coin', c1:'#1b4332', c2:'#2d6a4f', un:false },
+  { id:2, name:'Blue Lagoon', cost:25, t:'coin', c1:'#023e8a', c2:'#0077b6', un:false },
+  { id:3, name:'Sunset Glow', cost:35, t:'coin', c1:'#590d22', c2:'#800f2f', un:false },
+  { id:4, name:'Royal Purple', cost:45, t:'coin', c1:'#3c096c', c2:'#5a189a', un:false },
+  { id:5, name:'Desert Sand', cost:55, t:'coin', c1:'#7f4f24', c2:'#936639', un:false },
+  { id:6, name:'Cyber Pink', cost:65, t:'coin', c1:'#4a0e4e', c2:'#7209b7', un:false },
+  { id:7, name:'Arctic Ice', cost:75, t:'coin', c1:'#005f73', c2:'#0a9396', un:false },
+  { id:8, name:'Volcano Lava', cost:85, t:'coin', c1:'#370617', c2:'#6a040f', un:false },
+  { id:9, name:'Mint Fresh', cost:95, t:'coin', c1:'#134e4a', c2:'#0f766e', un:false },
+  { id:10, name:'Golden Palace', cost:110, t:'coin', c1:'#5c4d00', c2:'#806b00', un:false },
+  { id:11, name:'Deep Space', cost:125, t:'coin', c1:'#0b090a', c2:'#161a1d', un:false },
+  { id:12, name:'Emerald Gem', cost:2, t:'gem', c1:'#004b23', c2:'#007200', un:false },
+  { id:13, name:'Ruby Arena', cost:3, t:'gem', c1:'#641220', c2:'#85182a', un:false },
+  { id:14, name:'Sapphire Sky', cost:4, t:'gem', c1:'#03045e', c2:'#023e8a', un:false },
+  { id:15, name:'Diamond Prism', cost:6, t:'gem', c1:'#240046', c2:'#7b2cbf', un:false }
+];
+let curBg = wps;
+
+const sks = [
+  { id:0, name:'Lime Viper', cost:0, t:'free', h:'#00ff87', b:'#60efff', un:true },
+  { id:1, name:'Solar Gold', cost:20, t:'coin', h:'#ffbe0b', b:'#fb5607', un:false },
+  { id:2, name:'Hot Pink', cost:30, t:'coin', h:'#ff006e', b:'#ff70a6', un:false },
+  { id:3, name:'Electric Blue', cost:40, t:'coin', h:'#3a86ff', b:'#8ecae6', un:false },
+  { id:4, name:'Toxic Slime', cost:50, t:'coin', h:'#ccff33', b:'#70e000', un:false },
+  { id:5, name:'Fire Dragon', cost:60, t:'coin', h:'#ff0000', b:'#ffba08', un:false },
+  { id:6, name:'Ocean Wave', cost:70, t:'coin', h:'#00f5d4', b:'#00bbf9', un:false },
+  { id:7, name:'Grape Candy', cost:80, t:'coin', h:'#9b5de5', b:'#f15bb5', un:false },
+  { id:8, name:'Tiger Stripe', cost:90, t:'coin', h:'#ff7b00', b:'stripe', c1:'#ff7b00', c2:'#222', un:false },
+  { id:9, name:'Bumble Bee', cost:100, t:'coin', h:'#fee440', b:'stripe', c1:'#fee440', c2:'#111', un:false },
+  { id:10, name:'Candy Cane', cost:115, t:'coin', h:'#ff0054', b:'stripe', c1:'#ff0054', c2:'#ffffff', un:false },
+  { id:11, name:'Matrix Code', cost:130, t:'coin', h:'#00ff00', b:'stripe', c1:'#003300', c2:'#00cc00', un:false },
+  { id:12, name:'Cyber Neon', cost:2, t:'gem', h:'#00f5d4', b:'#ff007f', un:false },
+  { id:13, name:'Royal Crown', cost:3, t:'gem', h:'#ffd700', b:'#9d4edd', un:false },
+  { id:14, name:'Ice Phoenix', cost:4, t:'gem', h:'#ffffff', b:'#48cae4', un:false },
+  { id:15, name:'Mega Rainbow', cost:6, t:'gem', h:'#ff0000', b:'rb', un:false }
+];
+let curSk = sks;
+
+function saveData() {
+  try {
+    localStorage.setItem('megaSnakeSave', JSON.stringify({
+      coins, gems, wpUn: wps.map(w=>w.un), skUn: sks.map(s=>s.un), bgId: curBg.id, skId: curSk.id
+    }));
+  } catch(e) {}
+}
+function loadData() {
+  try {
+    let d = JSON.parse(localStorage.getItem('megaSnakeSave'));
+    if (d) {
+      coins = d.coins ?? 25; gems = d.gems ?? 2;
+      if (d.wpUn) d.wpUn.forEach((u, i) => { if(wps[i]) wps[i].un = u; });
+      if (d.skUn) d.skUn.forEach((u, i) => { if(sks[i]) sks[i].un = u; });
+      if (wps[d.bgId]) curBg = wps[d.bgId];
+      if (sks[d.skId]) curSk = sks[d.skId];
+    }
+  } catch(e) {}
+}
+
+function renderShop() {
+  document.getElementById("wpGrid").innerHTML = wps.map(w => {
+    let s = curBg.id === w.id, txt = w.un ? (s ? "✓ Active" : "Lagayein") : `${w.cost} ${w.t==='coin'?'🪙':'💎'}`;
+    return `<div class="card ${s?'sel':''}">
+      <div class="preview-wp" style="background: repeating-linear-gradient(45deg, ${w.c1}, ${w.c1} 10px, ${w.c2} 10px, ${w.c2} 20px);"></div>
+      <span class="card-name">${w.name}</span>
+      <button class="buy-btn ${s?'eq':''}" onclick="buyWp(${w.id})">${txt}</button>
+    </div>`;
+  }).join("");
+
+  document.getElementById("skGrid").innerHTML = sks.map(k => {
+    let s = curSk.id === k.id, txt = k.un ? (s ? "✓ Active" : "Lagayein") : `${k.cost} ${k.t==='coin'?'🪙':'💎'}`;
+    let b1 = k.b==='rb'?'#ffbe0b':(k.b==='stripe'?k.c1:k.b);
+    let b2 = k.b==='rb'?'#00f5d4':(k.b==='stripe'?k.c2:k.b);
+    let b3 = k.b==='rb'?'#ff007f':(k.b==='stripe'?k.c1:k.b);
+    return `<div class="card ${s?'sel':''}">
+      <div class="preview-sk">
+        <div class="sk-dot" style="background:${b3}"></div>
+        <div class="sk-dot" style="background:${b2}"></div>
+        <div class="sk-dot" style="background:${b1}"></div>
+        <div class="sk-dot" style="background:${k.h}; border:1px solid white;"></div>
+      </div>
+      <span class="card-name">${k.name}</span>
+      <button class="buy-btn ${s?'eq':''}" onclick="buySk(${k.id})">${txt}</button>
+    </div>`;
+  }).join("");
+}
+
+function buyWp(id) {
+  let w = wps[id];
+  if (w.un) { curBg = w; playTone(500, 'sine', 0.1); }
+  else if (w.t === 'coin' && coins >= w.cost) { coins -= w.cost; w.un = true; curBg = w; playTone(700, 'triangle', 0.2); }
+  else if (w.t === 'gem' && gems >= w.cost) { gems -= w.cost; w.un = true; curBg = w; playTone(800, 'triangle', 0.2); }
+  else { alert("Coins ya Gems kam hain!"); return; }
+  saveData(); updateUI(); renderShop();
+}
+
+function buySk(id) {
+  let k = sks[id];
+  if (k.un) { curSk = k; playTone(500, 'sine', 0.1); }
+  else if (k.t === 'coin' && coins >= k.cost) { coins -= k.cost; k.un = true; curSk = k; playTone(700, 'triangle', 0.2); }
+  else if (k.t === 'gem' && gems >= k.cost) { gems -= k.cost; k.un = true; curSk = k; playTone(800, 'triangle', 0.2); }
+  else { alert("Coins ya Gems kam hain!"); return; }
+  saveData(); updateUI(); renderShop();
+}
+
+function setDiff(lvl, btn) {
+  document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  speed = lvl === 'easy' ? 200 : (lvl === 'diff' ? 145 : 105);
+}
+
+function updateUI() {
+  document.getElementById("sc").innerText = score;
+  document.getElementById("lv").innerText = level;
+  document.getElementById("cn").innerText = coins;
+  document.getElementById("gm").innerText = gems;
+  let pTxt = [];
+  if (shieldActive) pTxt.push("🛡️ Shield");
+  if (magnetTimer > 0) pTxt.push(`🧲 Magnet (${Math.ceil(magnetTimer/5)}s)`);
+  document.getElementById("activePwr").innerText = pTxt.join(" | ");
+}
+
+function openGame() {
+  document.getElementById("lobbyScreen").style.display = "none";
+  document.getElementById("gameScreen").style.display = "flex";
+  startMatch();
+}
+
+function goHome() {
+  clearInterval(loop); clearTimeout(bTime); playing = false;
+  document.getElementById("gameScreen").style.display = "none";
+  document.getElementById("lobbyScreen").style.display = "block";
+  renderShop();
+}
+
+function startMatch() {
+  document.getElementById("overBox").style.display = "none";
+  document.getElementById("bTimer").innerText = "";
+  snake = [{x:120, y:200}, {x:100, y:200}, {x:80, y:200}];
+  d = "RIGHT"; nextD = "RIGHT"; score = 0; level = 1; eaten = 0;
+  bonus = null; bombs = []; powerUp = null; shieldActive = false; magnetTimer = 0; playing = true;
+  document.getElementById("lvlGoal").innerText = "Level 1: 5 Seb";
+  spawnFood(); updateUI(); cvs.focus();
+  clearInterval(loop); loop = setInterval(draw, speed);
+}
+
+function isOccupied(x, y) {
+  return snake.some(s => s.x === x && s.y === y) || bombs.some(b => b.x === x && b.y === y) || (food.x === x && food.y === y);
+}
+
+function spawnFood() {
+  for (let i = 0; i < 100; i++) {
+    let fx = Math.floor(Math.random()*20)*box, fy = Math.floor(Math.random()*20)*box;
+    if (!isOccupied(fx, fy)) { food = {x: fx, y: fy}; return; }
+  }
+  food = {x: 200, y: 200};
+}
+
+function spawnBombs(count) {
+  bombs = [];
+  for (let c = 0; c < count; c++) {
+    for (let i = 0; i < 60; i++) {
+      let bx = Math.floor(Math.random()*20)*box, by = Math.floor(Math.random()*20)*box;
+      if (!isOccupied(bx, by) && (Math.abs(bx - snake.x) > 40 || Math.abs(by - snake.y) > 40)) {
+        bombs.push({x: bx, y: by}); break;
+      }
+    }
+  }
+}
+
+function spawnPowerOrBonus() {
+  let px = 200, py = 200;
+  for (let i = 0; i < 60; i++) {
+    let tx = Math.floor(Math.random()*20)*box, ty = Math.floor(Math.random()*20)*box;
+    if (!isOccupied(tx, ty)) { px = tx; py = ty; break; }
+  }
+  if (Math.random() < 0.45) {
+    let t = Math.random() > 0.5;
+    bonus = { x: px, y: py, m: t?3:2, c: t?'#00f5d4':'#fee440', l: t?'3x':'2x' };
+    document.getElementById("bTimer").innerText = `✨ ${bonus.l} Bonus Seb Aa Gaya! ✨`;
+    clearTimeout(bTime);
+    bTime = setTimeout(() => { bonus = null; document.getElementById("bTimer").innerText = ""; }, 7000);
+  } else {
+    let isMag = Math.random() > 0.5;
+    powerUp = { x: px, y: py, type: isMag ? 'magnet' : 'shield', icon: isMag ? '🧲' : '🛡️' };
+    document.getElementById("bTimer").innerText = `⚡ ${isMag ? 'Magnet' : 'Shield'} Power Maidan Mein Hai!`;
+  }
+}
+
+function setDir(dir) {
+  if (!playing) return;
+  if (dir==="LEFT" && d!=="RIGHT") nextD="LEFT";
+  else if (dir==="UP" && d!=="DOWN") nextD="UP";
+  else if (dir==="RIGHT" && d!=="LEFT") nextD="RIGHT";
+  else if (dir==="DOWN" && d!=="UP") nextD="DOWN";
+}
+
+cvs.addEventListener("keydown", e => {
+  if (e.keyCode >= 37 && e.keyCode <= 40) e.preventDefault();
+  if (e.keyCode === 37) setDir("LEFT");
+  if (e.keyCode === 38) setDir("UP");
+  if (e.keyCode === 39) setDir("RIGHT");
+  if (e.keyCode === 40) setDir("DOWN");
+});
+
+function draw() {
+  d = nextD; tickCount++;
+  for (let r = 0; r < 20; r++) {
+    for (let c = 0; c < 20; c++) {
+      ctx.fillStyle = (r + c) % 2 === 0 ? curBg.c1 : curBg.c2;
+      ctx.fillRect(c * box, r * box, box, box);
+    }
+  }
+
+  if (magnetTimer > 0) {
+    magnetTimer--;
+    if (food.x < snake[0].x) food.x += box; else if (food.x > snake[0].x) food.x -= box;
+    if (food.y < snake[0].y) food.y += box; else if (food.y > snake[0].y) food.y -= box;
+    updateUI();
+  }
+
+  bombs.forEach(b => {
+    ctx.fillStyle = "#222"; ctx.beginPath(); ctx.arc(b.x+10, b.y+10, 8, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = "#ff0055"; ctx.beginPath(); ctx.arc(b.x+10, b.y+10, 4, 0, Math.PI*2); ctx.fill();
+  });
+
+  ctx.fillStyle = "#ff0055"; ctx.beginPath(); ctx.arc(food.x+10, food.y+10, 8, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = "#00ff87"; ctx.fillRect(food.x+9, food.y+1, 3, 5);
+
+  if (bonus) {
+    ctx.fillStyle = bonus.c; ctx.beginPath(); ctx.arc(bonus.x+10, bonus.y+10, 10, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = "black"; ctx.font = "bold 11px Arial"; ctx.textAlign = "center"; ctx.fillText(bonus.l, bonus.x+10, bonus.y+14);
+  }
+  if (powerUp) {
+    ctx.font = "16px Arial"; ctx.textAlign = "center"; ctx.fillText(powerUp.icon, powerUp.x+10, powerUp.y+16);
+  }
+
+  const rb = ['#ff0055','#ff7b00','#fee440','#00ff87','#00bbf9','#9b5de5'];
+  snake.forEach((s, i) => {
+    ctx.fillStyle = i === 0 ? curSk.h : (curSk.b === 'rb' ? rb[i % rb.length] : (curSk.b === 'stripe' ? (i % 2 === 0 ? curSk.c1 : curSk.c2) : curSk.b));
+    ctx.beginPath(); ctx.arc(s.x+10, s.y+10, i===0 ? 10 : 8.5, 0, Math.PI*2); ctx.fill();
+    if (shieldActive && i === 0) {
+      ctx.strokeStyle = "#00f5d4"; ctx.lineWidth = 2; ctx.stroke();
+    }
+    if (i === 0) {
+      if (tickCount % 4 < 2) {
+        ctx.fillStyle = "#ff0055";
+        if (d==="RIGHT") ctx.fillRect(s.x+19, s.y+9, 5, 2);
+        if (d==="LEFT") ctx.fillRect(s.x-4, s.y+9, 5, 2);
+        if (d==="UP") ctx.fillRect(s.x+9, s.y-4, 2, 5);
+        if (d==="DOWN") ctx.fillRect(s.x+9, s.y+19, 2, 5);
+      }
+      ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(s.x+6, s.y+7, 2.5, 0, Math.PI*2); ctx.arc(s.x+14, s.y+7, 2.5, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(s.x+6, s.y+7, 1.2, 0, Math.PI*2); ctx.arc(s.x+14, s.y+7, 1.2, 0, Math.PI*2); ctx.fill();
+    }
+  });
+
+  let hx = snake[0].x, hy = snake[0].y;
+  if (d==="LEFT") hx -= box; if (d==="UP") hy -= box; if (d==="RIGHT") hx += box; if (d==="DOWN") hy += box;
+  if (hx < 0) hx = 380; if (hx >= 400) hx = 0; if (hy < 0) hy = 380; if (hy >= 400) hy = 0;
+
+  let hitSelf = snake.some(s => s.x === hx && s.y === hy);
+  let hitBomb = bombs.some(b => b.x === hx && b.y === hy);
+
+  if (hitSelf || hitBomb) {
+    if (shieldActive) {
+      shieldActive = false;
+      bombs = bombs.filter(b => !(b.x === hx && b.y === hy));
+      playTone(300, 'sawtooth', 0.2); updateUI();
+    } else {
+      clearInterval(loop); clearTimeout(bTime); playing = false;
+      playTone(150, 'sawtooth', 0.4);
+      coins = Math.max(0, coins - 5); saveData(); updateUI();
+      document.getElementById("bTimer").innerText = "";
+      document.getElementById("fSc").innerText = score;
+      document.getElementById("overBox").style.display = "flex";
+      return;
+    }
+  }
+
+  snake.unshift({x:hx, y:hy});
+
+  if (powerUp && hx === powerUp.x && hy === powerUp.y) {
+    playTone(850, 'sine', 0.2);
+    if (powerUp.type === 'shield') shieldActive = true;
+    else magnetTimer = 40;
+    powerUp = null; document.getElementById("bTimer").innerText = ""; updateUI();
+  }
+
+  if (bonus && hx === bonus.x && hy === bonus.y) {
+    playTone(950, 'triangle', 0.25);
+    score += 10 * bonus.m; bonus = null; clearTimeout(bTime); document.getElementById("bTimer").innerText = ""; updateUI();
+  }
+
+  if (hx === food.x && hy === food.y) {
+    playTone(600, 'sine', 0.1);
+    score += 10; eaten++;
+    let rem = 5 - (eaten % 5);
+    if (eaten % 5 === 0) {
+      level++;
+      playTone(1000, 'triangle', 0.35);
+      let winCoins = 10 + Math.floor(Math.random() * 6);
+      coins += winCoins;
+      if (level % 3 === 0) gems += 1;
+      spawnBombs(Math.min(6, level - 1));
+      saveData();
+      document.getElementById("bTimer").innerText = `🎉 Level ${level-1} Jeeta! +${winCoins} Coins 🪙`;
+    }
+    document.getElementById("lvlGoal").innerText = `Level ${level}: ${rem} Seb`;
+    if (eaten % 3 === 0) spawnPowerOrBonus();
+    spawnFood(); updateUI();
+  } else {
+    snake.pop();
+  }
+}
+
+loadData(); updateUI(); renderShop();
+</script>
+</body>
+</html>
